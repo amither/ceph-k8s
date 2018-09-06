@@ -9,24 +9,45 @@ spec:
         app: ceph-mon
     spec:
       nodeSelector: 
-        ceph-mon: enable
+        ceph-mon: enabled
       hostNetwork: true
       dnsPolicy: ClusterFirstWithHostNet
       serviceAccount: default
+      initContainers:
+      - name: ceph-init-mon-keyring
+        image: ceph/daemon:v3.0.5-stable-3.0-luminous-centos-7
+        imagePullPolicy: IfNotPresent
+        command:
+        - /bin/sh
+        - "-c"
+        - |
+          set -ex
+          cp -vf /etc/ceph/ceph.mon.keyring.seed /etc/ceph/ceph.mon.keyring
+          touch /etc/ceph/test
+        volumeMounts:
+        - name: secrets
+          mountPath: /etc/ceph/ceph.mon.keyring.seed
+          subPath: ceph.mon.keyring
+          readOnly: true
+        - name: ceph-etc-dir
+          mountPath: /etc/ceph
+          readOnly: false
       containers:
       - name: ceph-mon
         image: ceph/daemon:v3.0.5-stable-3.0-luminous-centos-7
-        #imagePullPolicy: IfNotPresent
-        command:
-        - sleep
-        - "3600"
+        imagePullPolicy: IfNotPresent
+        #command:
+        #- sleep
+        #- "3600"
         env:
         - name: CEPH_DAEMON
           value: mon
-        - name: KV_TYPE
-          value: k8s
+        #- name: KV_TYPE
+        #  value: k8s
         - name: MON_IP
-          value: 172.16.0.13
+          valueFrom:
+            fieldRef:
+              fieldPath: status.podIP
         - name: K8S_HOST_NETWORK
           value: "1"
         - name: CEPH_PUBLIC_NETWORK
@@ -48,6 +69,9 @@ spec:
         - name: localtime
           mountPath: /etc/localtime
           readOnly: true
+        - name: ceph-etc-dir
+          mountPath: /etc/ceph
+          readOnly: false
         - name: ceph-etc 
           mountPath: /etc/ceph/ceph.conf
           subPath: ceph.conf
@@ -55,35 +79,35 @@ spec:
         - name: secrets
           mountPath: /etc/ceph/ceph.client.admin.keyring
           subPath: ceph.client.admin.keyring
-          readOnly: false
-        - name: secrets
-          mountPath: /etc/ceph/ceph.mon.keyring
-          subPath: ceph.mon.keyring
-          readOnly: false
+          readOnly: true
         - name: secrets
           mountPath: /var/lib/ceph/bootstrap-osd/ceph.keyring
           subPath: bootstrap-osd.ceph.keyring
-          readOnly: false
+          readOnly: true
         - name: secrets
           mountPath: /var/lib/ceph/bootstrap-mds/ceph.keyring
           subPath: bootstrap-mds.ceph.keyring
+          readOnly: true
+        - name: lib 
+          mountPath: /var/lib/ceph
           readOnly: false
-        #- name: lib 
-        #  mountPath: /var/lib/ceph
-        #  readOnly: false
-        #- name: logs 
-        #  mountPath: /var/log/ceph
-        #  readOnly: false
+        - name: logs 
+          mountPath: /var/log/ceph
+          readOnly: false
       volumes:
       - name: localtime
         hostPath:
           path: /etc/localtime
-      #- name: lib
-      #  hostPath:
-      #    path: /var/lib/ceph-k8s
-      #- name: logs
-      #  hostPath:
-      #    path: /var/log/ceph-k8s
+      - name: ceph-etc-dir
+        emptyDir: {}
+      - name: lib
+        emptyDir: {}
+        #hostPath:
+        #  path: /var/lib/ceph
+      - name: logs
+        emptyDir: {}
+        #hostPath:
+        #  path: /var/log/ceph
       - name: ceph-etc
         configMap:
           name: ceph-etc
