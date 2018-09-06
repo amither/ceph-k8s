@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ceph-etc
+data:
+  ceph.conf: |
+    [global]
+    fsid = c59b46f6-fef1-4145-a524-9b89e3a0b6d8
+    mon host = 172.16.0.13 ,172.16.0.5,172.16.0,6
+    public network = 172.16.0.0/20
+    cluster network = 172.16.0.0/20
+    mon_allow_pool_delete=true
+
