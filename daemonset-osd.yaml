@@ -1,0 +1,89 @@
+apiVersion: extensions/v1beta1
+kind: DaemonSet
+metadata:
+  name: ceph-osd
+spec:
+  template:
+    metadata:
+      labels:
+        app: ceph-osd
+    spec:
+      nodeSelector: 
+        ceph-osd: enabled
+      hostNetwork: true
+      dnsPolicy: ClusterFirstWithHostNet
+      serviceAccount: default
+      initContainers:
+      - name: ceph-zap-device
+        image: ceph/daemon:v3.0.5-stable-3.0-luminous-centos-7
+        imagePullPolicy: IfNotPresent
+        securityContext:
+          privileged: true
+        env:
+        - name: CEPH_DAEMON
+          value: zap_device
+        - name: OSD_DEVICE
+          value: /dev/vdb
+        volumeMounts:
+        - name: dev
+          mountPath: /dev
+      containers:
+      - name: ceph-osd
+        image: ceph/daemon:v3.0.5-stable-3.0-luminous-centos-7
+        imagePullPolicy: IfNotPresent
+        securityContext:
+          privileged: true
+        #command:
+        #- sleep
+        #- "3600"
+        env:
+        - name: CEPH_DAEMON
+          value: osd
+        - name: OSD_DEVICE
+          value: /dev/vdb
+        - name: OSD_TYPE
+          value: disk
+        - name: OSD_BLUESTORE
+          value: "1"
+        ports:
+        - containerPort: 6800
+        #livenessProbe:
+        #  tcpSocket:
+        #    port: 6800
+        #  initialDelaySeconds: 60                                                                    
+        #  timeoutSeconds: 5
+        #readinessProbe:
+        #  tcpSocket:
+        #    port: 6800                                                                               
+        #  timeoutSeconds: 5
+        volumeMounts:
+        - name: localtime
+          mountPath: /etc/localtime
+          readOnly: true
+        - name: etc-ceph 
+          mountPath: /etc/ceph
+          readOnly: false
+        - name: lib 
+          mountPath: /var/lib/ceph
+          readOnly: false
+        - name: logs 
+          mountPath: /var/log/ceph
+          readOnly: false
+        - name: dev
+          mountPath: /dev
+      volumes:
+      - name: etc-ceph
+        hostPath:
+          path: /data/ceph/etc
+      - name: localtime
+        hostPath:
+          path: /etc/localtime
+      - name: lib
+        hostPath:
+          path: /data/ceph/lib
+      - name: logs
+        hostPath:
+          path: /data/ceph/log
+      - name: dev
+        hostPath:
+          path: /dev

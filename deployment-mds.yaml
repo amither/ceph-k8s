@@ -1,0 +1,67 @@
+apiVersion: v1
+kind: Deployment
+metadata:
+  name: ceph-mds
+spec:
+  replicas: 2
+  template:
+    metadata:
+      labels:
+        app: ceph-mds
+    spec:
+      #nodeSelector: 
+      #  ceph-osd: enabled
+      hostNetwork: true
+      dnsPolicy: ClusterFirstWithHostNet
+      serviceAccount: default
+      containers:
+      - name: ceph-mds
+        image: ceph/daemon:v3.0.5-stable-3.0-luminous-centos-7
+        imagePullPolicy: IfNotPresent
+        securityContext:
+          privileged: true
+        #command:
+        #- sleep
+        #- "3600"
+        env:
+        - name: CEPH_DAEMON
+          value: mds
+        - name: CEPHFS_CREATE
+          value: "0"
+        ports:
+        - containerPort: 6800
+        #livenessProbe:
+        #  tcpSocket:
+        #    port: 6800
+        #  initialDelaySeconds: 60                                                                    
+        #  timeoutSeconds: 5
+        #readinessProbe:
+        #  tcpSocket:
+        #    port: 6800                                                                               
+        #  timeoutSeconds: 5
+        volumeMounts:
+        - name: localtime
+          mountPath: /etc/localtime
+          readOnly: true
+        - name: etc-ceph 
+          mountPath: /etc/ceph
+          readOnly: false
+        - name: lib 
+          mountPath: /var/lib/ceph
+          readOnly: false
+        - name: logs 
+          mountPath: /var/log/ceph
+          readOnly: false
+      volumes:
+      - name: etc-ceph
+        hostPath:
+          path: /data/ceph/etc
+      - name: localtime
+        hostPath:
+          path: /etc/localtime
+      - name: lib
+        hostPath:
+          path: /data/ceph/lib
+      - name: logs
+        hostPath:
+          path: /data/ceph/log
