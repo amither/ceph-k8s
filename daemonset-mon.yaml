@@ -22,34 +22,36 @@ spec:
         - "-c"
         - |
           set -ex
+          #mkdir -p /var/lib/ceph/bootstrap-osd
+          #mkdir -p /var/lib/ceph/bootstrap-mds
           cp -vf /etc/ceph/ceph.mon.keyring.seed /etc/ceph/ceph.mon.keyring
-          touch /etc/ceph/test
+          #cp -vf /tmp/ceph/ceph.client.admin.keyring /etc/ceph/ceph.client.admin.keyring
+          #cp -vf /tmp/ceph/bootstrap-osd/ceph.keyring /var/lib/ceph/bootstrap-osd/ceph.keyring
+          #cp -vf /tmp/ceph/bootstrap-mds/ceph.keyring /var/lib/ceph/bootstrap-mds/ceph.keyring
         volumeMounts:
-        - name: secrets
+        - name: ceph-conf
           mountPath: /etc/ceph/ceph.mon.keyring.seed
           subPath: ceph.mon.keyring
           readOnly: true
-        - name: ceph-etc-dir
+        - name: etc-ceph 
           mountPath: /etc/ceph
           readOnly: false
       containers:
       - name: ceph-mon
         image: ceph/daemon:v3.0.5-stable-3.0-luminous-centos-7
         imagePullPolicy: IfNotPresent
-        #command:
-        #- sleep
-        #- "3600"
+        command:
+        - sleep
+        - "3600"
         env:
         - name: CEPH_DAEMON
           value: mon
-        #- name: KV_TYPE
-        #  value: k8s
         - name: MON_IP
           valueFrom:
             fieldRef:
               fieldPath: status.podIP
-        - name: K8S_HOST_NETWORK
-          value: "1"
+        #- name: K8S_HOST_NETWORK
+        #  value: "1"
         - name: CEPH_PUBLIC_NETWORK
           value: 172.16.0.0/20
         - name: K8S_MON_SELECTOR 
@@ -69,25 +71,17 @@ spec:
         - name: localtime
           mountPath: /etc/localtime
           readOnly: true
-        - name: ceph-etc-dir
+        - name: etc-ceph 
           mountPath: /etc/ceph
           readOnly: false
-        - name: ceph-etc 
+        - name: ceph-conf 
           mountPath: /etc/ceph/ceph.conf
           subPath: ceph.conf
           readOnly: false
-        - name: secrets
+        - name: ceph-conf 
           mountPath: /etc/ceph/ceph.client.admin.keyring
           subPath: ceph.client.admin.keyring
-          readOnly: true
-        - name: secrets
-          mountPath: /var/lib/ceph/bootstrap-osd/ceph.keyring
-          subPath: bootstrap-osd.ceph.keyring
-          readOnly: true
-        - name: secrets
-          mountPath: /var/lib/ceph/bootstrap-mds/ceph.keyring
-          subPath: bootstrap-mds.ceph.keyring
-          readOnly: true
+          readOnly: false
         - name: lib 
           mountPath: /var/lib/ceph
           readOnly: false
@@ -95,23 +89,18 @@ spec:
           mountPath: /var/log/ceph
           readOnly: false
       volumes:
+      - name: etc-ceph
+        emptyDir: {}
       - name: localtime
         hostPath:
           path: /etc/localtime
-      - name: ceph-etc-dir
-        emptyDir: {}
       - name: lib
-        emptyDir: {}
-        #hostPath:
-        #  path: /var/lib/ceph
+        hostPath:
+          path: /data/ceph/lib
       - name: logs
-        emptyDir: {}
-        #hostPath:
-        #  path: /var/log/ceph
-      - name: ceph-etc
+        hostPath:
+          path: /data/ceph/log
+      - name: ceph-conf
         configMap:
-          name: ceph-etc
-          defaultMode: 0444
-      - name: secrets
-        secret:
-          secretName: ceph-secret
+          name: ceph-conf
+          defaultMode: 0777
