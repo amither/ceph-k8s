@@ -1,0 +1,72 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: ceph-mds
+  namespace: ceph
+spec:
+  replicas: 2
+  template:
+    metadata:
+      labels:
+        app: ceph
+        daemon: mds
+      namespace: ceph
+    spec:
+      nodeSelector: 
+        node-type: storage
+      hostNetwork: true
+      dnsPolicy: ClusterFirstWithHostNet
+      serviceAccount: default
+      containers:
+      - name: ceph-mds
+        image: ceph/daemon:latest
+        imagePullPolicy: IfNotPresent
+        securityContext:
+          privileged: true
+        #command:
+        #- sleep
+        #- "3600"
+        env:
+        - name: CEPH_DAEMON
+          value: mds
+        - name: CEPHFS_CREATE
+          value: "0"
+        ports:
+        - containerPort: 6900
+        #livenessProbe:
+        #  tcpSocket:
+        #    port: 6800
+        #  initialDelaySeconds: 60                                                                    
+        #  timeoutSeconds: 5
+        #readinessProbe:
+        #  tcpSocket:
+        #    port: 6800                                                                               
+        #  timeoutSeconds: 5
+        volumeMounts:
+        - name: ceph-bootstrap-osd-keyring
+          mountPath: /var/lib/ceph/bootstrap-osd
+        - name: ceph-bootstrap-mds-keyring
+          mountPath: /var/lib/bootstrap-mds
+        - name: localtime
+          mountPath: /etc/localtime
+          readOnly: true
+        - name: ceph-conf
+          mountPath: /etc/ceph
+        #- name: lib 
+        #  mountPath: /var/lib/ceph
+        #- name: logs 
+        #  mountPath: /var/log/ceph
+        #  readOnly: false
+      volumes:
+        - name: ceph-conf
+          configMap:
+            name: ceph-conf-combined
+        - name: ceph-bootstrap-osd-keyring
+          configMap:
+            name: ceph-bootstrap-osd-keyring
+        - name: ceph-bootstrap-mds-keyring
+          configMap:
+            name: ceph-bootstrap-mds-keyring
+        - name: localtime
+          hostPath:
+            path: /etc/localtime
