@@ -23,14 +23,20 @@ spec:
       serviceAccount: default
       volumes:
         - name: ceph-conf
-          configMap:
-            name: ceph-conf-combined
+          secret:
+            secretName: ceph-conf-combined
         - name: ceph-bootstrap-osd-keyring
-          configMap:
-            name: ceph-bootstrap-osd-keyring
+          secret:
+            secretName: ceph-bootstrap-osd-keyring
         - name: ceph-bootstrap-mds-keyring
-          configMap:
-            name: ceph-bootstrap-mds-keyring
+          secret:
+            secretName: ceph-bootstrap-mds-keyring
+        - name: ceph-bootstrap-rgw-keyring
+          secret:
+            secretName: ceph-bootstrap-rgw-keyring
+        - name: ceph-bootstrap-rbd-keyring
+          secret:
+            secretName: ceph-bootstrap-rbd-keyring
         - name: etc-ceph
           emptyDir: {}
         - name: localtime
@@ -59,6 +65,10 @@ spec:
             mountPath: /tmp/ceph/bootstrap-osd
           - name: ceph-bootstrap-mds-keyring
             mountPath: /tmp/ceph/bootstrap-mds
+          - name: ceph-bootstrap-rgw-keyring
+            mountPath: /tmp/ceph/bootstrap-rgw
+          - name: ceph-bootstrap-rbd-keyring
+            mountPath: /tmp/ceph/bootstrap-rbd
           - name: etc-ceph 
             mountPath: /etc/ceph
             readOnly: false
@@ -77,9 +87,9 @@ spec:
                     - "/remove-mon.sh"
           ports:
             - containerPort: 6789
-          #command:
-          #  - sleep 
-          #  - "3600"
+          command:
+            - sleep 
+            - "3600"
           env:
             - name: CEPH_DAEMON
               value: MON
