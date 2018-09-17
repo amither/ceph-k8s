@@ -35,38 +35,30 @@ spec:
         - containerPort: 6900
         #livenessProbe:
         #  tcpSocket:
-        #    port: 6800
+        #    port: 6900
         #  initialDelaySeconds: 60                                                                    
         #  timeoutSeconds: 5
         #readinessProbe:
         #  tcpSocket:
-        #    port: 6800                                                                               
+        #    port: 6900                                                                               
         #  timeoutSeconds: 5
         volumeMounts:
-        - name: ceph-bootstrap-osd-keyring
-          mountPath: /var/lib/ceph/bootstrap-osd
-        - name: ceph-bootstrap-mds-keyring
-          mountPath: /var/lib/bootstrap-mds
-        - name: localtime
-          mountPath: /etc/localtime
-          readOnly: true
-        - name: ceph-conf
-          mountPath: /etc/ceph
-        #- name: lib 
-        #  mountPath: /var/lib/ceph
-        #- name: logs 
-        #  mountPath: /var/log/ceph
-        #  readOnly: false
+          - name: etc-ceph 
+            mountPath: /etc/ceph
+            readOnly: false
+          - name: lib 
+            mountPath: /var/lib/ceph
+            readOnly: false
+          - name: localtime
+            mountPath: /etc/localtime
+            readOnly: true
       volumes:
-        - name: ceph-conf
-          configMap:
-            name: ceph-conf-combined
-        - name: ceph-bootstrap-osd-keyring
-          configMap:
-            name: ceph-bootstrap-osd-keyring
-        - name: ceph-bootstrap-mds-keyring
-          configMap:
-            name: ceph-bootstrap-mds-keyring
+        - name: etc-ceph
+          hostPath:
+            path: /data/ceph/etc
+        - name: lib
+          hostPath:
+            path: /data/ceph/lib
         - name: localtime
           hostPath:
             path: /etc/localtime

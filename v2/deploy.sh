@@ -9,7 +9,8 @@ kubectl create configmap ceph-bootstrap-mds-keyring --from-file=ceph.keyring=cep
 kubectl create configmap ceph-bootstrap-osd-keyring --from-file=ceph.keyring=ceph.osd.keyring --namespace=ceph
 
 kubectl create -f ceph-rbac.yaml
-kubectl create -f ceph-mon-v1-svc.yaml
-kubectl create -f ceph-mon-v1-ds.yaml
+kubectl create -f service-mon.yaml
+kubectl create -f daemonset-mon.yaml
+kubectl create -f daemonset-mgr.yaml
 kubectl create -f daemonset-osd.yaml
 kubectl create -f deployment-mds.yaml

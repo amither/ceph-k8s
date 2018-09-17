@@ -1,0 +1,118 @@
+---
+kind: DaemonSet
+apiVersion: extensions/v1beta1
+metadata:
+  labels:
+    app: ceph
+    daemon: mon
+  name: ceph-mon
+  namespace: ceph
+spec:
+  template:
+    metadata:
+      name: ceph-mon
+      namespace: ceph
+      labels:
+        app: ceph
+        daemon: mon
+    spec:
+      nodeSelector:
+        node-type: storage
+      hostNetwork: true
+      dnsPolicy: ClusterFirstWithHostNet
+      serviceAccount: default
+      volumes:
+        - name: ceph-conf
+          configMap:
+            name: ceph-conf-combined
+        - name: ceph-bootstrap-osd-keyring
+          configMap:
+            name: ceph-bootstrap-osd-keyring
+        - name: ceph-bootstrap-mds-keyring
+          configMap:
+            name: ceph-bootstrap-mds-keyring
+        - name: etc-ceph
+          hostPath:
+            path: /data/ceph/etc
+        - name: lib
+          hostPath:
+            path: /data/ceph/lib
+        - name: localtime
+          hostPath:
+            path: /etc/localtime
+      initContainers:
+      - name: ceph-init-mon
+        image: ceph/daemon:latest
+        imagePullPolicy: IfNotPresent
+        command:
+        - /bin/sh
+        - "-c"
+        - |
+          set -ex
+          mkdir -p /var/lib/ceph/bootstrap-osd
+          mkdir -p /var/lib/ceph/bootstrap-mds
+          cp -vf /tmp/ceph/etc/* /etc/ceph/
+          cp -vf /tmp/ceph/bootstrap-osd/ceph.keyring /var/lib/ceph/bootstrap-osd/ceph.keyring
+          cp -vf /tmp/ceph/bootstrap-mds/ceph.keyring /var/lib/ceph/bootstrap-mds/ceph.keyring
+        volumeMounts:
+          - name: ceph-conf
+            mountPath: /tmp/ceph/etc
+          - name: ceph-bootstrap-osd-keyring
+            mountPath: /tmp/ceph/bootstrap-osd
+          - name: ceph-bootstrap-mds-keyring
+            mountPath: /tmp/ceph/bootstrap-mds
+          - name: etc-ceph 
+            mountPath: /etc/ceph
+            readOnly: false
+          - name: lib 
+            mountPath: /var/lib/ceph
+            readOnly: false
+      containers:
+        - name: ceph-mon
+          image: ceph/daemon:latest
+          imagePullPolicy: Always
+          lifecycle:
+            preStop:
+                exec:
+                  # remove the mon on Pod stop.
+                  command:
+                    - "/remove-mon.sh"
+          ports:
+            - containerPort: 6789
+          #command:
+          #  - sleep 
+          #  - "3600"
+          env:
+            - name: CEPH_DAEMON
+              value: MON
+            - name: KV_TYPE
+              value: k8s
+            - name: NETWORK_AUTO_DETECT
+              value: "4"
+            - name: CLUSTER
+              value: ceph
+            - name: K8S_HOST_NETWORK
+              value: "1"
+            - name: MON_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+          volumeMounts:
+            - name: etc-ceph 
+              mountPath: /etc/ceph
+              readOnly: false
+            - name: lib 
+              mountPath: /var/lib/ceph
+              readOnly: false
+            - name: localtime
+              mountPath: /etc/localtime
+              readOnly: true
+          #livenessProbe:
+          #    tcpSocket:
+          #      port: 6789
+          #    initialDelaySeconds: 60
+          #    timeoutSeconds: 5
+          #readinessProbe:
+          #    tcpSocket:
+          #      port: 6789
+          #    timeoutSeconds: 5
