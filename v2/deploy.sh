@@ -11,6 +11,18 @@ kubectl create configmap ceph-bootstrap-osd-keyring --from-file=ceph.keyring=cep
 kubectl create -f ceph-rbac.yaml
 kubectl create -f service-mon.yaml
 kubectl create -f daemonset-mon.yaml
+
+while true; do
+  desired=`kubectl -n ceph get ds | grep ceph-mon | awk '{print $2}'`
+  ready=`kubectl -n ceph get ds | grep ceph-mon | awk '{print $4}'`
+  if [ $drsired -eq $ready ]; then
+    echo "mon ready[$ready],wait..."
+    break
+  else
+    sleep 2  
+  fi
+done
+
 kubectl create -f daemonset-mgr.yaml
 kubectl create -f daemonset-osd.yaml
 kubectl create -f deployment-mds.yaml
