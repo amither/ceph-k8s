@@ -13,13 +13,13 @@ spec:
       namespace: ceph
     spec:
       nodeSelector: 
-        node-type: storage
+        ceph-mds: enabled
       hostNetwork: true
       dnsPolicy: ClusterFirstWithHostNet
       serviceAccount: default
       containers:
       - name: ceph-mds
-        image: ceph/daemon:latest
+        image: ceph/daemon:v3.0.5-stable-3.0-luminous-centos-7
         imagePullPolicy: IfNotPresent
         securityContext:
           privileged: true
@@ -31,8 +31,8 @@ spec:
           value: mds
         - name: CEPHFS_CREATE
           value: "0"
-        ports:
-        - containerPort: 6900
+        #ports:
+        #- containerPort: 6900
         #livenessProbe:
         #  tcpSocket:
         #    port: 6900

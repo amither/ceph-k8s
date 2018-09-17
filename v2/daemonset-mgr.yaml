@@ -16,13 +16,13 @@ spec:
         daemon: mgr
     spec:
       nodeSelector: 
-        node-type: storage
+        ceph-mgr: enabled
       hostNetwork: true
       dnsPolicy: ClusterFirstWithHostNet
       serviceAccount: default
       containers:
       - name: ceph-mgr
-        image: ceph/daemon:latest
+        image: ceph/daemon:v3.0.5-stable-3.0-luminous-centos-7
         imagePullPolicy: IfNotPresent
         securityContext:
           privileged: true
@@ -34,15 +34,15 @@ spec:
           value: mgr
         ports:
         - containerPort: 7000
-        #livenessProbe:
-        #  tcpSocket:
-        #    port: 7000
-        #  initialDelaySeconds: 60                                                                    
-        #  timeoutSeconds: 5
-        #readinessProbe:
-        #  tcpSocket:
-        #    port: 7000                                                                               
-        #  timeoutSeconds: 5
+        livenessProbe:
+          tcpSocket:
+            port: 7000
+          initialDelaySeconds: 60                                                                    
+          timeoutSeconds: 5
+        readinessProbe:
+          tcpSocket:
+            port: 7000                                                                               
+          timeoutSeconds: 5
         volumeMounts:
           - name: etc-ceph 
             mountPath: /etc/ceph

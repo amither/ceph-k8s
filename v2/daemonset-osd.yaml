@@ -16,13 +16,13 @@ spec:
         daemon: osd
     spec:
       nodeSelector: 
-        node-type: storage
+        ceph-osd: enabled
       hostNetwork: true
       dnsPolicy: ClusterFirstWithHostNet
       serviceAccount: default
       initContainers:
       - name: ceph-zap-device
-        image: ceph/daemon:latest
+        image: ceph/daemon:v3.0.5-stable-3.0-luminous-centos-7
         imagePullPolicy: IfNotPresent
         securityContext:
           privileged: true
@@ -36,7 +36,7 @@ spec:
           mountPath: /dev
       containers:
       - name: ceph-osd
-        image: ceph/daemon:latest
+        image: ceph/daemon:v3.0.5-stable-3.0-luminous-centos-7
         imagePullPolicy: IfNotPresent
         securityContext:
           privileged: true
@@ -52,8 +52,8 @@ spec:
           value: disk
         - name: OSD_BLUESTORE
           value: "1"
-        ports:
-        - containerPort: 6800
+        #ports:
+        #- containerPort: 6800
         #livenessProbe:
         #  tcpSocket:
         #    port: 6800
