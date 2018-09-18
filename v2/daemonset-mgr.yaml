@@ -32,17 +32,17 @@ spec:
         env:
         - name: CEPH_DAEMON
           value: mgr
-        ports:
-        - containerPort: 7000
-        livenessProbe:
-          tcpSocket:
-            port: 7000
-          initialDelaySeconds: 60                                                                    
-          timeoutSeconds: 5
-        readinessProbe:
-          tcpSocket:
-            port: 7000                                                                               
-          timeoutSeconds: 5
+        #ports:
+        #- containerPort: 7000
+        #livenessProbe:
+        #  tcpSocket:
+        #    port: 7000
+        #  initialDelaySeconds: 60                                                                    
+        #  timeoutSeconds: 5
+        #readinessProbe:
+        #  tcpSocket:
+        #    port: 7000                                                                               
+        #  timeoutSeconds: 5
         volumeMounts:
           - name: etc-ceph 
             mountPath: /etc/ceph
