@@ -20,20 +20,20 @@ spec:
       hostNetwork: true
       dnsPolicy: ClusterFirstWithHostNet
       serviceAccount: default
-      initContainers:
-      - name: ceph-zap-device
-        image: ceph/daemon:v3.0.5-stable-3.0-luminous-centos-7
-        imagePullPolicy: IfNotPresent
-        securityContext:
-          privileged: true
-        env:
-        - name: CEPH_DAEMON
-          value: zap_device
-        - name: OSD_DEVICE
-          value: /dev/vdb
-        volumeMounts:
-        - name: dev
-          mountPath: /dev
+      #initContainers:
+      #- name: ceph-zap-device
+      #  image: ceph/daemon:v3.0.5-stable-3.0-luminous-centos-7
+      #  imagePullPolicy: IfNotPresent
+      #  securityContext:
+      #    privileged: true
+      #  env:
+      #  - name: CEPH_DAEMON
+      #    value: zap_device
+      #  - name: OSD_DEVICE
+      #    value: /dev/vdb
+      #  volumeMounts:
+      #  - name: dev
+      #    mountPath: /dev
       containers:
       - name: ceph-osd
         image: ceph/daemon:v3.0.5-stable-3.0-luminous-centos-7
