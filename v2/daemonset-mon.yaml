@@ -76,7 +76,7 @@ spec:
               exec:
                 # remove the mon on Pod stop.
                 command:
-                  - "/remove-mon.sh"
+                  - ceph mon remove $MON_NAME 
         ports:
           - containerPort: 6789
         env:
