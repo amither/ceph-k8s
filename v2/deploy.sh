@@ -1,9 +1,9 @@
 #/bin/bash
 mv ~/.kube/config ~/.kube/config.bak
-opt="-s "https://cls-eimlt94k.ccs.tencent-cloud.com" --username=admin --password=UC9BYV3Earz5PQlC5yg9R4npOE8lHgPj --certificate-authority=cluster.ca"
-kubectl $opt label node 172.16.16.11 ceph-mon=enabled ceph-osd=enabled ceph-mgr=enabled ceph-mds=enabled
-kubectl $opt label node 172.16.16.13 ceph-mon=enabled ceph-osd=enabled ceph-mgr=enabled ceph-mds=enabled
-#kubectl $opt label node 172.16.16.14 ceph-mon=enabled ceph-osd=enabled ceph-mgr=enabled ceph-mds=enabled
+#opt="-s "https://cls-eimlt94k.ccs.tencent-cloud.com" --username=admin --password=UC9BYV3Earz5PQlC5yg9R4npOE8lHgPj --certificate-authority=cluster.ca"
+kubectl $opt label node 172.16.0.10 ceph-mon=enabled ceph-osd=enabled ceph-mgr=enabled ceph-mds=enabled
+kubectl $opt label node 172.16.0.15 ceph-mon=enabled ceph-osd=enabled ceph-mgr=enabled ceph-mds=enabled
+kubectl $opt label node 172.16.0.16 ceph-mon=enabled ceph-osd=enabled ceph-mgr=enabled 
 
 kubectl $opt create namespace ceph
 
@@ -30,6 +30,22 @@ done
 echo "mon desired[$desired] all ready, mon ok"
 
 kubectl $opt create -f daemonset-mgr.yaml
+
+#zap device
+kubectl $opt create -f daemonset-osd-zap.yaml
+while true; do
+  desired=`kubectl $opt -n ceph get ds | grep ceph-osd-zap | awk '{print $2}'`
+  ready=`kubectl $opt -n ceph get ds | grep ceph-osd-zap | awk '{print $4}'`
+  if [[ $desired -eq $ready && $desired > 0 ]]; then
+    break
+  else
+    echo "osd-zap desired[$desired] ready[$ready],wait..."
+    sleep 2  
+  fi
+done 
+echo "osd-zap desired[$desired] all run over"
+
+#install osd, mds
 kubectl $opt create -f daemonset-osd.yaml
 kubectl $opt create -f deployment-mds.yaml
 
@@ -50,4 +66,5 @@ kubectl $opt -n ceph exec $mon_pod ceph mgr module enable dashboard
  
 kubectl $opt -n ceph exec $mon_pod ceph status
 
-
+#delete osd-zap daemonset
+kubectl $opt -n ceph delete ds/ceph-osd-zap --force --grace-period=10
