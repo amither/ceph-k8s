@@ -26,6 +26,12 @@ spec:
         imagePullPolicy: IfNotPresent
         securityContext:
           privileged: true
+        command:
+        - /bin/sh
+        - "-c"
+        - |
+          set -ex
+          parted --script "${OSD_DEVICE}" print | grep -qE '^ 1.*ceph data' || /entrypoint.sh
         env:
         - name: CEPH_DAEMON
           value: zap_device
