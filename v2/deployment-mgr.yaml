@@ -1,12 +1,10 @@
 apiVersion: extensions/v1beta1
-kind: DaemonSet
+kind: Deployment
 metadata:
-  labels:
-    app: ceph
-    daemon: mgr
   name: ceph-mgr
   namespace: ceph
 spec:
+  replicas: 1
   template:
     metadata:
       name: ceph-mgr
@@ -15,8 +13,6 @@ spec:
         app: ceph
         daemon: mgr
     spec:
-      nodeSelector: 
-        ceph-mgr: enabled
       hostNetwork: true
       dnsPolicy: ClusterFirstWithHostNet
       serviceAccount: default
